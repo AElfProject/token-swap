@@ -48,6 +48,7 @@ contract MerkleTreeGenerator is Ownable {
             string memory targetAddress,
             uint256 amount,
             ,
+            ,
             ) = receiptProvider.receipts(i);
 
             bytes32 amountHash = sha256(abi.encodePacked(amount));

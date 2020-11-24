@@ -30,7 +30,7 @@ contract ReceiptMaker is Ownable, Receipts {
         bool _finished
     ) internal {
 
-        receipts.push(Receipt(_asset, _owner, _targetAddress, _amount, _startTime, _finished));
+        receipts.push(Receipt(_asset, _owner, _targetAddress, _amount, _startTime, 0, _finished));
         receiptCount = receipts.length;
         uint256 id = receiptCount.sub(1);
         ownerToReceipts[msg.sender].push(id);
@@ -55,16 +55,14 @@ contract ReceiptMaker is Ownable, Receipts {
         uint256 amount = 0;
 
         for (uint256 i = 0; i < myReceipts.length; i++) {
-            if (receipts[myReceipts[i]].finished == false) {
-                amount = amount.add(receipts[myReceipts[i]].amount);
-            }
+            amount = amount.add(receipts[myReceipts[i]].amount);
         }
 
         return amount;
     }
 
-    function getReceiptInfo(uint256 index) public view returns (bytes32, string memory, uint256, bool){
+    function getReceiptInfo(uint256 index) public view returns (bytes32, string memory, uint256){
         string memory targetAddress = receipts[index].targetAddress;
-        return (sha256(abi.encode(index)), targetAddress, receipts[index].amount, receipts[index].finished);
+        return (sha256(abi.encode(index)), targetAddress, receipts[index].amount);
     }
 }

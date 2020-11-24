@@ -73,7 +73,6 @@ contract("ReceiptMaker", (accounts) => {
             assert.equal(receiptInfo[0].substring(2), receiptIdHashInHex);
             assert.equal(receiptInfo[1], targetAddress);
             assert.equal(receiptInfo[2], amount);
-            assert.equal(receiptInfo[3], false);
         }
 
         {
@@ -114,7 +113,6 @@ contract("ReceiptMaker", (accounts) => {
             assert.equal(receiptInfo[0].substring(2), receiptIdHashInHex);
             assert.equal(receiptInfo[1], targetAddress);
             assert.equal(receiptInfo[2], amount);
-            assert.equal(receiptInfo[3], false);
         }
 
         {
@@ -146,7 +144,6 @@ contract("ReceiptMaker", (accounts) => {
             assert.equal(receiptInfo[0].substring(2), receiptIdHashInHex);
             assert.equal(receiptInfo[1], targetAddress);
             assert.equal(receiptInfo[2], amount);
-            assert.equal(receiptInfo[3], false);
         }
     });
 

@@ -7,6 +7,7 @@ contract Receipts {
         string targetAddress;
         uint256 amount;
         uint256 startTime;
+        uint256 endTime;
         bool finished;
     }
 
