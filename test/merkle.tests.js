@@ -1,5 +1,5 @@
 const {expectRevert} = require('@openzeppelin/test-helpers');
-const LOCK = artifacts.require('LockMapping');
+const ReceiptMaker = artifacts.require('ReceiptMaker');
 const TOKEN = artifacts.require('MockToken');
 const MERKLE = artifacts.require('MerkleTreeGenerator');
 var crypto = require('crypto');
@@ -31,7 +31,7 @@ contract("MERKLE", (accounts) => {
     let owner = accounts[0];
     beforeEach(async () => {
         this.token = await TOKEN.new('TOKEN', 'T', {from: owner});
-        this.locker = await LOCK.new(this.token.address, 10, {from: owner});
+        this.locker = await ReceiptMaker.new(this.token.address, {from: owner});
         this.merkle = await MERKLE.new(this.locker.address, {from: owner});
     });
 

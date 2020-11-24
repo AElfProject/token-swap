@@ -1,9 +1,6 @@
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./Receipts.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "./Receipts.sol";
-import "./Receipts.sol";
-import "./Receipts.sol";
 
 pragma solidity 0.6.12;
 
@@ -50,7 +47,6 @@ contract MerkleTreeGenerator is Ownable {
             ,
             string memory targetAddress,
             uint256 amount,
-            ,
             ,
             ) = receiptProvider.receipts(i);
 
