@@ -12,13 +12,15 @@ contract ReceiptMaker is Ownable, Receipts {
 
     event NewReceipt(uint256 receiptId, address asset, address owner, uint256 amount);
     address public asset;
+    address public receiver;
 	ERC20 token;
 
     mapping(address => uint256[]) public ownerToReceipts;
 
-	constructor (ERC20 _token) public{
+	constructor (ERC20 _token, address _receiver) public{
 		asset = address(_token);
 		token = _token;
+        receiver = _receiver;
 	}
 
 	function _createReceipt(
@@ -41,7 +43,7 @@ contract ReceiptMaker is Ownable, Receipts {
     //create new receipt
     function createReceipt(uint256 _amount, string calldata _targetAddress) external {
         //deposit token to this contract
-        token.safeTransferFrom(msg.sender, address(0xdead), _amount);
+        token.safeTransferFrom(msg.sender, receiver, _amount);
         _createReceipt(asset, msg.sender, _targetAddress, _amount, now, false);
     }
 

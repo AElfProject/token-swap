@@ -9,11 +9,12 @@ contract("ReceiptMaker", (accounts) => {
     let owner = accounts[0];
     beforeEach(async () => {
         this.token = await TOKEN.new('TOKEN', 'T', {from: owner});
-        this.locker = await ReceiptMaker.new(this.token.address, {from: owner});
+        this.locker = await ReceiptMaker.new(this.token.address, '0x000000000000000000000000000000000000dead', {from: owner});
     });
 
     it("constructor", async () => {
         assert.equal(await this.locker.asset.call(), this.token.address);
+        assert.equal(await this.locker.receiver.call(), '0x000000000000000000000000000000000000dEaD');
     });
 
     it("createReceipt without allowance", async () => {

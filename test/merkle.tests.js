@@ -31,7 +31,7 @@ contract("MERKLE", (accounts) => {
     let owner = accounts[0];
     beforeEach(async () => {
         this.token = await TOKEN.new('TOKEN', 'T', {from: owner});
-        this.locker = await ReceiptMaker.new(this.token.address, {from: owner});
+        this.locker = await ReceiptMaker.new(this.token.address, '0x000000000000000000000000000000000000dead',{from: owner});
         this.merkle = await MERKLE.new(this.locker.address, {from: owner});
     });
 
