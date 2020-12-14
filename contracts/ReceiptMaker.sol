@@ -63,8 +63,8 @@ contract ReceiptMaker is Ownable, Receipts {
         return amount;
     }
 
-    function getReceiptInfo(uint256 index) public view returns (bytes32, string memory, uint256){
-        string memory targetAddress = receipts[index].targetAddress;
-        return (sha256(abi.encode(index)), targetAddress, receipts[index].amount);
+    function getReceiptInfo(uint256 _receiptId) public view returns (bytes32, string memory, uint256){
+        string memory targetAddress = receipts[_receiptId].targetAddress;
+        return (sha256(abi.encode(_receiptId)), targetAddress, receipts[_receiptId].amount);
     }
 }
