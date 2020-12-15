@@ -8,7 +8,7 @@ contract MerkleTreeGenerator is Ownable {
 
     using SafeMath for uint256;
 
-    uint256 constant pathMaximalLength = 7;
+    uint256 constant pathMaximalLength = 10;
     uint256 constant public MerkleTreeMaximalLeafCount = 1 << pathMaximalLength;
     uint256 constant TreeMaximalSize = MerkleTreeMaximalLeafCount * 2;
     uint256 public merkleTreeCount = 0;
