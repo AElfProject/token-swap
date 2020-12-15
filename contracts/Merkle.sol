@@ -152,23 +152,24 @@ contract MerkleTreeGenerator is Ownable {
         uint256 shift;
         uint256 i = 0;
 
-        while (_index < _nodes.length - 1) {
+        while (_index < _nodes.length.sub(1)) {
 
-            if (_index % 2 == 0)
+            if (_index.mod(2) == 0)
             {
                 // add right neighbor node
-                neighbor = _nodes[_index + 1];
+                neighbor = _nodes[_index.add(1)];
                 isLeftNeighbor = false;
             }
             else
             {
                 // add left neighbor node
-                neighbor = _nodes[_index - 1];
+                neighbor = _nodes[_index.sub(1)];
                 isLeftNeighbor = true;
             }
 
             neighbors[i] = neighbor;
-            isLeftNeighbors[i++] = isLeftNeighbor;
+            isLeftNeighbors[i] = isLeftNeighbor;
+            i = i.add(1);
 
             nodeCountInRow = nodeCountInRow.mod(2) == 0 ? nodeCountInRow : nodeCountInRow.add(1);
             shift = _index.sub(indexOfFirstNodeInRow).div(2);
@@ -196,30 +197,36 @@ contract MerkleTreeGenerator is Ownable {
         }
 
         uint256 nodeCount = leafCount;
-        if (_leaves.length % 2 == 1) {
-            nodes[leafCount] = (_leaves[leafCount - 1]);
-            nodeCount = nodeCount + 1;
+        if (_leaves.length.mod(2) == 1) {
+            nodes[leafCount] = (_leaves[leafCount.sub(1)]);
+            nodeCount = nodeCount.add(1);
         }
 
         // uint256 nodeToAdd = nodes.length / 2;
         uint256 nodeToAdd = nodeCount.div(2);
 
-        while (i < nodeCount - 1) {
+        while (i < nodeCount.sub(1)) {
 
-            left = nodes[i++];
-            right = nodes[i++];
-            nodes[nodeCount++] = sha256(abi.encode(left, right));
+            left = nodes[i];
+            i = i.add(1);
+
+            right = nodes[i];
+            i = i.add(1);
+
+            nodes[nodeCount] = sha256(abi.encode(left, right));
+            nodeCount = nodeCount.add(1);
+
             if (++newAdded != nodeToAdd)
                 continue;
 
-            if (nodeToAdd % 2 == 1 && nodeToAdd != 1)
+            if (nodeToAdd.mod(2) == 1 && nodeToAdd != 1)
             {
-                nodeToAdd++;
-                nodes[nodeCount] = nodes[nodeCount - 1];
-                nodeCount++;
+                nodeToAdd = nodeToAdd.add(1);
+                nodes[nodeCount] = nodes[nodeCount.sub(1)];
+                nodeCount = nodeCount.add(1);
             }
 
-            nodeToAdd /= 2;
+            nodeToAdd = nodeToAdd.div(2);
             newAdded = 0;
         }
 
