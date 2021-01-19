@@ -49,7 +49,7 @@ contract("MERKLE", (accounts) => {
 
     it("RecordReceipts with 1 receipt", async () => {
         await this.token.approve(this.locker.address, '100000', {from: owner});
-        await this.locker.createReceipt('100000', 'AAAAAAAAA', {from: owner});
+        await this.locker.createReceipt('100000', 'AAAAAAAAA',  '', {from: owner});
         await this.merkle.recordReceipts({from: owner});
 
         assert.equal(await this.merkle.merkleTreeCount.call(), 1);
@@ -82,8 +82,8 @@ contract("MERKLE", (accounts) => {
 
     it("RecordReceipts with 2 receipts", async () => {
         await this.token.approve(this.locker.address, '300000', {from: owner});
-        await this.locker.createReceipt('100000', 'AAAAAAAAA', {from: owner});
-        await this.locker.createReceipt('200000', 'BBBBBBBBB', {from: owner});
+        await this.locker.createReceipt('100000', 'AAAAAAAAA',  '', {from: owner});
+        await this.locker.createReceipt('200000', 'BBBBBBBBB',  '', {from: owner});
 
         await this.merkle.recordReceipts({from: owner});
 
@@ -133,9 +133,9 @@ contract("MERKLE", (accounts) => {
 
     it("RecordReceipts with 3 receipts", async () => {
         await this.token.approve(this.locker.address, '600000', {from: owner});
-        await this.locker.createReceipt('100000', 'AAAAAAAAA', {from: owner});
-        await this.locker.createReceipt('200000', 'BBBBBBBBB', {from: owner});
-        await this.locker.createReceipt('300000', 'CCCCCCCCC', {from: owner});
+        await this.locker.createReceipt('100000', 'AAAAAAAAA',  '', {from: owner});
+        await this.locker.createReceipt('200000', 'BBBBBBBBB',  '', {from: owner});
+        await this.locker.createReceipt('300000', 'CCCCCCCCC',  '', {from: owner});
 
         await this.merkle.recordReceipts({from: owner});
 
@@ -208,10 +208,10 @@ contract("MERKLE", (accounts) => {
 
     it("RecordReceipts with 4 receipts", async () => {
         await this.token.approve(this.locker.address, '1000000', {from: owner});
-        await this.locker.createReceipt('100000', 'AAAAAAAAA', {from: owner});
-        await this.locker.createReceipt('200000', 'BBBBBBBBB', {from: owner});
-        await this.locker.createReceipt('300000', 'CCCCCCCCC', {from: owner});
-        await this.locker.createReceipt('400000', 'DDDDDDDDD', {from: owner});
+        await this.locker.createReceipt('100000', 'AAAAAAAAA', '',  {from: owner});
+        await this.locker.createReceipt('200000', 'BBBBBBBBB',  '', {from: owner});
+        await this.locker.createReceipt('300000', 'CCCCCCCCC',  '', {from: owner});
+        await this.locker.createReceipt('400000', 'DDDDDDDDD', '',  {from: owner});
 
         await this.merkle.recordReceipts({from: owner});
 

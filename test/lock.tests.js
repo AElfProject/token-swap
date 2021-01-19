@@ -21,13 +21,20 @@ contract("LOCK", (accounts) => {
     });
 
     it("createReceipt without allowance", async () => {
-        await expectRevert(this.locker.createReceipt('100', 'CREATE', {from: owner}), "ERC20: transfer amount exceeds allowance.");
+        await expectRevert(this.locker.createReceipt('100', 'CREATE',  '', {from: owner}), "ERC20: transfer amount exceeds allowance.");
     });
 
     it("createReceipt with allowance", async () => {
         await this.token.approve(this.locker.address, '100', {from: owner});
-        await expectRevert(this.locker.createReceipt('101', 'CREATE', {from: owner}), "ERC20: transfer amount exceeds allowance.");
-        await this.locker.createReceipt('100', 'CREATE', {from: owner});
+        await expectRevert(this.locker.createReceipt('101', 'CREATE', '', {from: owner}), "ERC20: transfer amount exceeds allowance.");
+        let create = await this.locker.createReceipt('100', 'CREATE',  '123', {from: owner});
+        truffleAssert.eventEmitted(create, 'NewReceipt', (res) => {
+            receiptId = res.receiptId.toNumber();
+            return res.receiptId.toNumber() === 0
+                && res.invitingCode === '123'
+                && res.amount.toNumber() === 100
+                && res.owner === owner;
+        });
         let receiptCount = await this.locker.receiptCount.call();
         assert.equal(receiptCount, 1);
         let myReceipts = await this.locker.getMyReceipts.call(owner);
@@ -51,7 +58,7 @@ contract("LOCK", (accounts) => {
         {
             var targetAddress = 'CREATE1';
             var amount = 30;
-            let create = await this.locker.createReceipt(amount, targetAddress, {from: owner});
+            let create = await this.locker.createReceipt(amount, targetAddress,  '', {from: owner});
 
             let receiptId = 0;
             truffleAssert.eventEmitted(create, 'NewReceipt', (res) => {
@@ -59,8 +66,10 @@ contract("LOCK", (accounts) => {
                 return res.receiptId.toNumber() === 0
                     && res.asset === this.token.address
                     && res.amount.toNumber() === amount
-                    && res.owner === owner;
+                    && res.owner === owner
+                    && res.invitingCode === '';
             });
+
             let receiptCount = await this.locker.receiptCount.call();
             assert.equal(receiptCount, 1);
             let myReceipts = await this.locker.getMyReceipts.call(owner);
@@ -88,7 +97,7 @@ contract("LOCK", (accounts) => {
             let balanceBefore = await this.token.balanceOf.call(accounts[1]);
             assert.equal(balanceBefore, amount);
 
-            let create = await this.locker.createReceipt(amount, targetAddress, {from: accounts[1]});
+            let create = await this.locker.createReceipt(amount, targetAddress, '', {from: accounts[1]});
 
             let receiptId = 0;
             truffleAssert.eventEmitted(create, 'NewReceipt', (res) => {
@@ -124,7 +133,7 @@ contract("LOCK", (accounts) => {
         {
             var targetAddress = 'CREATE3';
             var amount = 70;
-            let create = await this.locker.createReceipt(amount, targetAddress, {from: owner});
+            let create = await this.locker.createReceipt(amount, targetAddress,  '', {from: owner});
 
             let receiptId = 0;
             truffleAssert.eventEmitted(create, 'NewReceipt', (res) => {
@@ -159,7 +168,7 @@ contract("LOCK", (accounts) => {
 
         var targetAddress = 'CREATE1';
         var amount = 30;
-        let create = await this.locker.createReceipt(amount, targetAddress, {from: owner});
+        let create = await this.locker.createReceipt(amount, targetAddress,  '', {from: owner});
         let receiptId = 0;
         truffleAssert.eventEmitted(create, 'NewReceipt', (res) => {
             receiptId = res.receiptId.toNumber();

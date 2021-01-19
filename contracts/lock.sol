@@ -10,7 +10,7 @@ contract LockMapping is Ownable, Receipts {
     using SafeMath for uint256;
     using SafeERC20 for ERC20;
 
-    event NewReceipt(uint256 receiptId, address asset, address owner, uint256 amount, uint256 endTime);
+    event NewReceipt(uint256 receiptId, address asset, address owner, uint256 amount, uint256 endTime, string invitingCode);
     event ReceiptFinished(uint256 receiptId, address asset, address owner, uint256 amount, uint256 finishTime);
 
     address public asset;
@@ -32,22 +32,23 @@ contract LockMapping is Ownable, Receipts {
         uint256 _amount,
         uint256 _startTime,
         uint256 _endTime,
-        bool _finished
+        bool _finished,
+        string calldata _code
     ) internal {
         receipts.push(Receipt(_asset, _owner, _targetAddress, _amount, _startTime, _endTime, _finished));
         totalAmountInReceipts = totalAmountInReceipts.add(_amount);
         receiptCount = receipts.length;
         uint256 id = receiptCount.sub(1);
         ownerToReceipts[msg.sender].push(id);
-        emit NewReceipt(id, _asset, _owner, _amount, _endTime);
+        emit NewReceipt(id, _asset, _owner, _amount, _endTime, _code);
     }
 
 
     //create new receipt
-    function createReceipt(uint256 _amount, string calldata _targetAddress) external {
+    function createReceipt(uint256 _amount, string calldata _targetAddress, string calldata _code) external {
         //deposit token to this contract
         token.safeTransferFrom(msg.sender, address(this), _amount);
-        _createReceipt(asset, msg.sender, _targetAddress, _amount, now, now.add(lockTime), false);
+        _createReceipt(asset, msg.sender, _targetAddress, _amount, now, now.add(lockTime), false, _code);
     }
 
     //finish the receipt and withdraw bonus and token
