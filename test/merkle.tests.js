@@ -3,6 +3,8 @@ const LOCK = artifacts.require('LockMapping');
 const TOKEN = artifacts.require('MockToken');
 const MERKLE = artifacts.require('MerkleTreeGenerator');
 var crypto = require('crypto');
+const truffleAssert = require('truffle-assertions');
+
 
 function calculateNodeHash(amount, target, receiptId) {
     let amountInStr = web3.eth.abi.encodeParameter('uint256', amount.toString());
@@ -50,8 +52,10 @@ contract("MERKLE", (accounts) => {
     it("RecordReceipts with 1 receipt", async () => {
         await this.token.approve(this.locker.address, '100000', {from: owner});
         await this.locker.createReceipt('100000', 'AAAAAAAAA',  '', {from: owner});
-        await this.merkle.recordReceipts({from: owner});
-
+        let recordReceipts = await this.merkle.recordReceipts({from: owner});
+        truffleAssert.eventEmitted(recordReceipts, 'NewTree', (res) => {
+            return res.treeIndex.toNumber() === 0
+        });
         assert.equal(await this.merkle.merkleTreeCount.call(), 1);
         let tree = await this.merkle.getMerkleTree.call(0);
         assert.equal(tree[1].toString(), '0'); // first receipt id
@@ -61,6 +65,9 @@ contract("MERKLE", (accounts) => {
 
         let treeNodes = tree[4];
         assert.equal(tree[0], treeNodes[2]);
+
+        let treeRoot = await this.merkle.getMerkleTreeRoot.call(0);
+        assert.equal(treeRoot, tree[0])
 
         let hashResult = calculateNodeHash(100000, 'AAAAAAAAA', 0);
         assert.equal(hashResult, treeNodes[0].substring(2));
@@ -96,6 +103,8 @@ contract("MERKLE", (accounts) => {
 
         let treeNodes = tree[4];
         assert.equal(tree[0], treeNodes[2]);
+        let treeRoot = await this.merkle.getMerkleTreeRoot.call(0);
+        assert.equal(treeRoot, tree[0])
 
         let node1 = calculateNodeHash(100000, 'AAAAAAAAA', 0);
         let node2 = calculateNodeHash(200000, 'BBBBBBBBB', 1);
@@ -148,6 +157,9 @@ contract("MERKLE", (accounts) => {
 
         let treeNodes = tree[4];
         assert.equal(tree[0], treeNodes[6]);
+
+        let treeRoot = await this.merkle.getMerkleTreeRoot.call(0);
+        assert.equal(treeRoot, tree[0])
 
         let node1 = calculateNodeHash(100000, 'AAAAAAAAA', 0);
         let node2 = calculateNodeHash(200000, 'BBBBBBBBB', 1);
@@ -225,6 +237,9 @@ contract("MERKLE", (accounts) => {
         let treeNodes = tree[4];
         assert.equal(tree[0], treeNodes[6]);
 
+        let treeRoot = await this.merkle.getMerkleTreeRoot.call(0);
+        assert.equal(treeRoot, tree[0]);
+
         let node1 = calculateNodeHash(100000, 'AAAAAAAAA', 0);
         let node2 = calculateNodeHash(200000, 'BBBBBBBBB', 1);
         let node3 = calculateNodeHash(300000, 'CCCCCCCCC', 2);
@@ -299,79 +314,5 @@ contract("MERKLE", (accounts) => {
             assert.equal(calculatedRoot, tree[0].substring(2));
         }
     });
-
-    // it("RecordReceipts with 65 receipt", async () => {
-    //     await this.token.approve(this.locker.address, '100000000', {from: owner});
-    //
-    //     for (let i = 0; i < 65; i++) {
-    //         await this.locker.createReceipt((i + 1).toString(), 'AAAAAAAAA', {from: owner});
-    //     }
-    //     await this.merkle.recordReceipts({from: owner});
-    //
-    //     assert.equal(await this.merkle.merkleTreeCount.call(), 1);
-    //     let tree = await this.merkle.getMerkleTree.call(0);
-    //     assert.equal(tree[1].toString(), '0'); // first receipt id
-    //     assert.equal(tree[2], 65); // receipt count
-    //     assert.equal(tree[3], 141); // tree size
-    //
-    //     let treeNodes = tree[4];
-    //     // assert.equal(tree[0], treeNodes[126]);
-    //
-    //     for (let i = 0; i < 65; i++) {
-    //         console.log(i);
-    //         let hashResult = calculateNodeHash(i+1, 'AAAAAAAAA', i);
-    //         assert.equal(hashResult, treeNodes[i].substring(2));
-    //
-    //         let path = await this.merkle.generateMerklePath.call(i);
-    //         assert.equal(path[0], 0);  // tree index
-    //         console.log('path :', path[2].length);
-    //         assert.equal(path[1], 7); //
-    //
-    //         assert.equal(path[2].length, 7);
-    //
-    //         assert.equal(path[3].length, 7);
-    //
-    //         let calculatedRoot = calculateWithPath(hashResult, path[2], path[3]);
-    //         assert.equal(calculatedRoot, tree[0].substring(2));
-    //     }
-    // });
-
-    // it("RecordReceipts with 128 receipt", async () => {
-    //     await this.token.approve(this.locker.address, '100000000', {from: owner});
-    //
-    //     for (let i = 0; i < 128; i++) {
-    //         await this.locker.createReceipt((i + 1).toString(), 'AAAAAAAAA', {from: owner});
-    //     }
-    //     await this.merkle.recordReceipts({from: owner});
-    //
-    //     assert.equal(await this.merkle.merkleTreeCount.call(), 1);
-    //     let tree = await this.merkle.getMerkleTree.call(0);
-    //     assert.equal(tree[1].toString(), '0'); // first receipt id
-    //     assert.equal(tree[2], 128); // receipt count
-    //     assert.equal(tree[3], 255); // tree size
-    //
-    //     let treeNodes = tree[4];
-    //     assert.equal(tree[0], treeNodes[254]);
-    //
-    //     let indexAry = [0,1,2,3,6,7,8,63,64,127];
-    //
-    //     for (let i = 0; i < indexAry.length; i++) {
-    //         let index = indexAry[i];
-    //         let hashResult = calculateNodeHash(index + 1, 'AAAAAAAAA', index);
-    //         assert.equal(hashResult, treeNodes[index].substring(2));
-    //
-    //         let path = await this.merkle.generateMerklePath.call(index);
-    //         assert.equal(path[0], 0);
-    //
-    //         assert.equal(path[1], 7);
-    //
-    //         assert.equal(path[2].length, 7);
-    //
-    //         assert.equal(path[3].length, 7);
-    //
-    //         let calculatedRoot = calculateWithPath(hashResult, path[2], path[3]);
-    //         assert.equal(calculatedRoot, tree[0].substring(2));
-    //     }
-    // });
 
 });

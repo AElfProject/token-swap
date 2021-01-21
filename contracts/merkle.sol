@@ -32,9 +32,12 @@ contract MerkleTreeGenerator is Ownable {
         uint256 tree_size;
     }
 
-    constructor (Receipts _lock) public {
-        receiptProviderAddress = address(_lock);
-        receiptProvider = _lock;
+    event NewTree(uint256 treeIndex);
+
+
+    constructor (Receipts _receiptMaker) public {
+        receiptProviderAddress = address(_receiptMaker);
+        receiptProvider = _receiptMaker;
     }
 
     //fetch receipts
@@ -68,6 +71,7 @@ contract MerkleTreeGenerator is Ownable {
         ReceiptCollection memory receiptCollection = ReceiptCollection(receiptCountInTree, leafCount, TreeMaximalSize);
         receiptCollections[merkleTreeCount] = receiptCollection;
         receiptCountInTree = receiptCountInTree.add(leafCount);
+        emit NewTree(merkleTreeCount);
         merkleTreeCount = merkleTreeCount.add(1);
     }
 
@@ -78,6 +82,15 @@ contract MerkleTreeGenerator is Ownable {
         bytes32[] memory treeNodes;
         (merkleTree, treeNodes) = _generateMerkleTree(receiptCollection.first_receipt_id, receiptCollection.receipt_count,receiptCollection.tree_size);
         return (merkleTree.root, merkleTree.first_receipt_id, merkleTree.leaf_count, merkleTree.size, treeNodes);
+    }
+
+    function getMerkleTreeRoot(uint256 _treeIndex) public view returns (bytes32){
+        require(_treeIndex < merkleTreeCount);
+        ReceiptCollection memory receiptCollection = receiptCollections[_treeIndex];
+        MerkleTree memory merkleTree;
+        bytes32[] memory treeNodes;
+        (merkleTree, treeNodes) = _generateMerkleTree(receiptCollection.first_receipt_id, receiptCollection.receipt_count,receiptCollection.tree_size);
+        return merkleTree.root;
     }
 
     //get users merkle tree path
