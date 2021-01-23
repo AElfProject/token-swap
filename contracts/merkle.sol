@@ -9,12 +9,8 @@ contract MerkleTreeGenerator is Ownable {
     using SafeMath for uint256;
 
     uint256 constant pathMaximalLength = 10;
-    uint256 constant public MerkleTreeMaximalLeafCount = 1 << pathMaximalLength;
-    uint256 constant TreeMaximalSize = MerkleTreeMaximalLeafCount * 2;
-    uint256 public merkleTreeCount = 0;
-    uint256 public receiptCountInTree = 0;
-
-    mapping(uint256 => ReceiptCollection) receiptCollections;
+    uint256 public MerkleTreeMaximalLeafCount;
+    uint256 MerkleTreeMaximalSize;
 
     Receipts receiptProvider;
     address public receiptProviderAddress;
@@ -26,18 +22,12 @@ contract MerkleTreeGenerator is Ownable {
         uint256 size;
     }
 
-    struct ReceiptCollection {
-        uint256 first_receipt_id;
-        uint256 receipt_count;
-        uint256 tree_size;
-    }
-
-    event NewTree(uint256 treeIndex);
-
-
-    constructor (Receipts _receiptMaker) public {
+    constructor (Receipts _receiptMaker, uint256 _pathLengthLimit) public {
         receiptProviderAddress = address(_receiptMaker);
         receiptProvider = _receiptMaker;
+        require(_pathLengthLimit <= pathMaximalLength, "Exceeding Maximal Path Length.");
+        MerkleTreeMaximalLeafCount = 1 << _pathLengthLimit;
+        MerkleTreeMaximalSize = MerkleTreeMaximalLeafCount.mul(2);
     }
 
     //fetch receipts
@@ -64,54 +54,42 @@ contract MerkleTreeGenerator is Ownable {
         return leaves;
     }
 
-    function recordReceipts() external onlyOwner {
-        uint256 receiptCount = receiptProvider.receiptCount().sub(receiptCountInTree);
-        require(receiptCount > 0, "[MERKLE]No receipts.");
-        uint256 leafCount = receiptCount < MerkleTreeMaximalLeafCount ? receiptCount : MerkleTreeMaximalLeafCount;
-        ReceiptCollection memory receiptCollection = ReceiptCollection(receiptCountInTree, leafCount, TreeMaximalSize);
-        receiptCollections[merkleTreeCount] = receiptCollection;
-        receiptCountInTree = receiptCountInTree.add(leafCount);
-        emit NewTree(merkleTreeCount);
-        merkleTreeCount = merkleTreeCount.add(1);
-    }
-
-    function getMerkleTree(uint256 _treeIndex) public view returns (bytes32, uint256, uint256, uint256, bytes32[] memory){
-        require(_treeIndex < merkleTreeCount);
-        ReceiptCollection memory receiptCollection = receiptCollections[_treeIndex];
+    function getArbitraryMerkleTree(uint256 _firstReceiptId, uint256 _receiptCount) public view returns (bytes32, uint256, uint256, uint256, bytes32[] memory){
         MerkleTree memory merkleTree;
         bytes32[] memory treeNodes;
-        (merkleTree, treeNodes) = _generateMerkleTree(receiptCollection.first_receipt_id, receiptCollection.receipt_count,receiptCollection.tree_size);
+        (merkleTree, treeNodes) = _generateMerkleTree(_firstReceiptId, _receiptCount);
         return (merkleTree.root, merkleTree.first_receipt_id, merkleTree.leaf_count, merkleTree.size, treeNodes);
     }
 
-    function getMerkleTreeRoot(uint256 _treeIndex) public view returns (bytes32){
-        require(_treeIndex < merkleTreeCount);
-        ReceiptCollection memory receiptCollection = receiptCollections[_treeIndex];
+    function getMerkleTree(uint256 _expectCount) public view returns (uint256, bytes32, uint256, uint256, uint256){
+        uint256 receiptCount = receiptProvider.receiptCount();
+        require(_expectCount > 0 && receiptCount> 0 && receiptCount.add(MerkleTreeMaximalLeafCount) > _expectCount);
         MerkleTree memory merkleTree;
         bytes32[] memory treeNodes;
-        (merkleTree, treeNodes) = _generateMerkleTree(receiptCollection.first_receipt_id, receiptCollection.receipt_count,receiptCollection.tree_size);
+        uint256 actualCount = _expectCount < receiptCount ? _expectCount : receiptCount;
+        uint256 previousTreeCount = actualCount.sub(1).div(MerkleTreeMaximalLeafCount);
+        uint256 firstReceiptId = previousTreeCount.mul(MerkleTreeMaximalLeafCount);
+        (merkleTree, treeNodes) = _generateMerkleTree(firstReceiptId, actualCount.sub(firstReceiptId));
+        return (previousTreeCount, merkleTree.root, merkleTree.first_receipt_id, merkleTree.leaf_count, merkleTree.size);
+    }
+
+    function getMerkleTreeRoot(uint256 _firstReceiptId, uint256 _receiptCount) public view returns (bytes32){
+        MerkleTree memory merkleTree;
+        bytes32[] memory treeNodes;
+        (merkleTree, treeNodes) = _generateMerkleTree(_firstReceiptId, _receiptCount);
         return merkleTree.root;
     }
 
     //get users merkle tree path
-    function generateMerklePath(uint256 _receiptId) public view returns (uint256, uint256, bytes32[] memory, bool[] memory) {
-        require(_receiptId < receiptCountInTree);
-
-        uint256 treeIndex = merkleTreeCount - 1;
-        for (; treeIndex >= 0; treeIndex--) {
-            if (_receiptId >= receiptCollections[treeIndex].first_receipt_id)
-                break;
-        }
-
-        ReceiptCollection memory receiptCollection = receiptCollections[treeIndex];
+    function generateMerklePath(uint256 _receiptId, uint256 _firstReceiptId, uint256 _receiptCount) public view returns (uint256, bytes32[] memory, bool[] memory) {
         MerkleTree memory merkleTree;
-        (merkleTree,) = _generateMerkleTree(receiptCollection.first_receipt_id, receiptCollection.receipt_count, receiptCollection.tree_size);
+        (merkleTree,) = _generateMerkleTree(_firstReceiptId, _receiptCount);
         uint256 index = _receiptId - merkleTree.first_receipt_id;
 
         uint256 pathLength;
         bytes32[pathMaximalLength] memory path;
         bool[pathMaximalLength] memory isLeftNeighbors;
-        (pathLength, path, isLeftNeighbors) = _generatePath(merkleTree, index, receiptCollection.tree_size);
+        (pathLength, path, isLeftNeighbors) = _generatePath(merkleTree, index);
 
         bytes32[] memory neighbors = new bytes32[](pathLength);
         bool[] memory positions = new bool[](pathLength);
@@ -120,15 +98,15 @@ contract MerkleTreeGenerator is Ownable {
             neighbors[i] = path[i];
             positions[i] = isLeftNeighbors[i];
         }
-        return (treeIndex, pathLength, neighbors, positions);
+        return (pathLength, neighbors, positions);
     }
 
-    function _generateMerkleTree(uint256 _firstReceiptId, uint256 _leafCount, uint256 treeMaximalSize) private view returns (MerkleTree memory, bytes32[] memory) {
+    function _generateMerkleTree(uint256 _firstReceiptId, uint256 _leafCount) private view returns (MerkleTree memory, bytes32[] memory) {
         bytes32[] memory leafNodes = _receiptsToLeaves(_firstReceiptId, _leafCount);
         bytes32[] memory allNodes;
         uint256 nodeCount;
 
-        (allNodes, nodeCount) = _leavesToTree(leafNodes, treeMaximalSize);
+        (allNodes, nodeCount) = _leavesToTree(leafNodes);
         MerkleTree memory merkleTree = MerkleTree(allNodes[nodeCount - 1], _leafCount, _firstReceiptId, nodeCount);
 
         bytes32[] memory treeNodes = new bytes32[](nodeCount);
@@ -138,13 +116,13 @@ contract MerkleTreeGenerator is Ownable {
         return (merkleTree, treeNodes);
     }
 
-    function _generatePath(MerkleTree memory _merkleTree, uint256 _index, uint256 treeMaximalSize) private view returns (uint256, bytes32[pathMaximalLength] memory, bool[pathMaximalLength] memory){
+    function _generatePath(MerkleTree memory _merkleTree, uint256 _index) private view returns (uint256, bytes32[pathMaximalLength] memory, bool[pathMaximalLength] memory){
 
         bytes32[] memory leaves = _receiptsToLeaves(_merkleTree.first_receipt_id, _merkleTree.leaf_count);
         bytes32[] memory allNodes;
         uint256 nodeCount;
 
-        (allNodes, nodeCount) = _leavesToTree(leaves, treeMaximalSize);
+        (allNodes, nodeCount) = _leavesToTree(leaves);
         require(nodeCount == _merkleTree.size);
 
         bytes32[] memory nodes = new bytes32[](_merkleTree.size);
@@ -194,7 +172,7 @@ contract MerkleTreeGenerator is Ownable {
         return (i, neighbors, isLeftNeighbors);
     }
 
-    function _leavesToTree(bytes32[] memory _leaves, uint256 maximalTreeSize) private pure returns (bytes32[] memory, uint256){
+    function _leavesToTree(bytes32[] memory _leaves) private view returns (bytes32[] memory, uint256){
         uint256 leafCount = _leaves.length;
         bytes32 left;
         bytes32 right;
@@ -202,7 +180,7 @@ contract MerkleTreeGenerator is Ownable {
         uint256 newAdded = 0;
         uint256 i = 0;
 
-        bytes32[] memory nodes = new bytes32[](maximalTreeSize);
+        bytes32[] memory nodes = new bytes32[](MerkleTreeMaximalSize);
 
         for (uint256 t = 0; t < leafCount; t++)
         {
