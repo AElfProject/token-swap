@@ -47,7 +47,7 @@ contract("MERKLE", (accounts) => {
         await this.token.approve(this.locker.address, '100000', {from: owner});
         await this.locker.createReceipt('100000', 'AAAAAAAAA',  '', {from: owner});
 
-        let tree = await this.merkle.getArbitraryMerkleTree.call(0, 1);
+        let tree = await this.merkle.getArbitraryMerkleTree.call(0, 0);
         assert.equal(tree[1].toString(), '0'); // first receipt id
         assert.equal(tree[2].toString(), '1'); // receipt count
         assert.equal(tree[3].toString(), '3'); // tree size
@@ -56,13 +56,13 @@ contract("MERKLE", (accounts) => {
         let treeNodes = tree[4];
         assert.equal(tree[0], treeNodes[2]);
 
-        let treeRoot = await this.merkle.getMerkleTreeRoot.call(0, 1);
+        let treeRoot = await this.merkle.getMerkleTreeRoot.call(0, 0);
         assert.equal(treeRoot, tree[0])
 
         let hashResult = calculateNodeHash(100000, 'AAAAAAAAA', 0);
         assert.equal(hashResult, treeNodes[0].substring(2));
 
-        let path = await this.merkle.generateMerklePath.call(0, 0, 1);
+        let path = await this.merkle.generateMerklePath.call(0, 0, 0);
 
         assert.equal(path[0], 1);
 
@@ -86,12 +86,12 @@ contract("MERKLE", (accounts) => {
         assert.equal(tree[3].toString(), '1'); // receipt count
         assert.equal(tree[4].toString(), '3'); // tree size
 
-        let treeRoot = await this.merkle.getMerkleTreeRoot.call(0, 1);
+        let treeRoot = await this.merkle.getMerkleTreeRoot.call(0, 0);
         assert.equal(treeRoot, tree[1])
 
         let hashResult = calculateNodeHash(100000, 'AAAAAAAAA', 0);
 
-        let path = await this.merkle.generateMerklePath.call(0, 0, 1);
+        let path = await this.merkle.generateMerklePath.call(0, 0, 0);
 
         assert.equal(path[0], 1);
 
@@ -111,7 +111,7 @@ contract("MERKLE", (accounts) => {
         await this.locker.createReceipt('200000', 'BBBBBBBBB',  '', {from: owner});
 
 
-        let tree = await this.merkle.getArbitraryMerkleTree.call(0, 2);
+        let tree = await this.merkle.getArbitraryMerkleTree.call(0, 1);
         assert.equal(tree[1].toString(), '0'); // first receipt id
         assert.equal(tree[2], 2); // receipt count
         assert.equal(tree[3], 3); // tree size
@@ -119,7 +119,7 @@ contract("MERKLE", (accounts) => {
 
         let treeNodes = tree[4];
         assert.equal(tree[0], treeNodes[2]);
-        let treeRoot = await this.merkle.getMerkleTreeRoot.call(0, 2);
+        let treeRoot = await this.merkle.getMerkleTreeRoot.call(0, 1);
         assert.equal(treeRoot, tree[0])
 
         let node1 = calculateNodeHash(100000, 'AAAAAAAAA', 0);
@@ -128,7 +128,7 @@ contract("MERKLE", (accounts) => {
         assert.equal(node2, treeNodes[1].substring(2));
 
         {
-            let path = await this.merkle.generateMerklePath.call(0, 0, 2);
+            let path = await this.merkle.generateMerklePath.call(0, 0, 1);
             assert.equal(path[0], 1);
             assert.equal(path[1].length, 1);
             assert.equal(path[1][0].toString().substring(2), node2);
@@ -141,7 +141,7 @@ contract("MERKLE", (accounts) => {
         }
 
         {
-            let path = await this.merkle.generateMerklePath.call(1, 0, 2);
+            let path = await this.merkle.generateMerklePath.call(1, 0, 1);
             assert.equal(path[0], 1);
             assert.equal(path[1].length, 1);
             assert.equal(path[1][0].toString().substring(2), node1);
@@ -166,14 +166,14 @@ contract("MERKLE", (accounts) => {
         assert.equal(tree[3], 2); // receipt count
         assert.equal(tree[4], 3); // tree size
 
-        let treeRoot = await this.merkle.getMerkleTreeRoot.call(0, 2);
+        let treeRoot = await this.merkle.getMerkleTreeRoot.call(0, 1);
         assert.equal(treeRoot, tree[1])
 
         let node1 = calculateNodeHash(100000, 'AAAAAAAAA', 0);
         let node2 = calculateNodeHash(200000, 'BBBBBBBBB', 1);
 
         {
-            let path = await this.merkle.generateMerklePath.call(0, 0, 2);
+            let path = await this.merkle.generateMerklePath.call(0, 0, 1);
             assert.equal(path[0], 1);
             assert.equal(path[1].length, 1);
             assert.equal(path[1][0].toString().substring(2), node2);
@@ -186,7 +186,7 @@ contract("MERKLE", (accounts) => {
         }
 
         {
-            let path = await this.merkle.generateMerklePath.call(1, 0, 2);
+            let path = await this.merkle.generateMerklePath.call(1, 0, 1);
             assert.equal(path[0], 1);
             assert.equal(path[1].length, 1);
             assert.equal(path[1][0].toString().substring(2), node1);
@@ -207,7 +207,7 @@ contract("MERKLE", (accounts) => {
         await this.locker.createReceipt('300000', 'CCCCCCCCC',  '', {from: owner});
 
 
-        let tree = await this.merkle.getArbitraryMerkleTree.call(0, 3);
+        let tree = await this.merkle.getArbitraryMerkleTree.call(0, 2);
         assert.equal(tree[1].toString(), '0'); // first receipt id
         assert.equal(tree[2], 3); // receipt count
         assert.equal(tree[3], 7); // tree size
@@ -216,7 +216,7 @@ contract("MERKLE", (accounts) => {
         let treeNodes = tree[4];
         assert.equal(tree[0], treeNodes[6]);
 
-        let treeRoot = await this.merkle.getMerkleTreeRoot.call(0, 3);
+        let treeRoot = await this.merkle.getMerkleTreeRoot.call(0, 2);
         assert.equal(treeRoot, tree[0])
 
         let node1 = calculateNodeHash(100000, 'AAAAAAAAA', 0);
@@ -228,7 +228,7 @@ contract("MERKLE", (accounts) => {
         assert.equal(node3, treeNodes[2].substring(2));
 
         {
-            let path = await this.merkle.generateMerklePath.call(0, 0, 3);
+            let path = await this.merkle.generateMerklePath.call(0, 0, 2);
             assert.equal(path[0], 2); // path length
             assert.equal(path[1].length, 2);
             assert.equal(path[1][0].toString().substring(2), node2);
@@ -243,7 +243,7 @@ contract("MERKLE", (accounts) => {
         }
 
         {
-            let path = await this.merkle.generateMerklePath.call(1, 0, 3);
+            let path = await this.merkle.generateMerklePath.call(1, 0, 2);
             assert.equal(path[0], 2);
             assert.equal(path[1].length, 2);
             assert.equal(path[1][0].toString().substring(2), node1);
@@ -258,7 +258,7 @@ contract("MERKLE", (accounts) => {
         }
 
         {
-            let path = await this.merkle.generateMerklePath.call(2, 0, 3);
+            let path = await this.merkle.generateMerklePath.call(2, 0, 2);
             assert.equal(path[0], 2);
             assert.equal(path[1].length, 2);
             assert.equal(path[1][0].toString().substring(2), node3);
@@ -288,7 +288,7 @@ contract("MERKLE", (accounts) => {
         assert.equal(tree[4], 7); // tree size
 
 
-        let treeRoot = await this.merkle.getMerkleTreeRoot.call(0, 3);
+        let treeRoot = await this.merkle.getMerkleTreeRoot.call(0, 2);
         assert.equal(treeRoot, tree[1])
 
         let node1 = calculateNodeHash(100000, 'AAAAAAAAA', 0);
@@ -297,7 +297,7 @@ contract("MERKLE", (accounts) => {
 
 
         {
-            let path = await this.merkle.generateMerklePath.call(0, 0, 3);
+            let path = await this.merkle.generateMerklePath.call(0, 0, 2);
             assert.equal(path[0], 2); // path length
             assert.equal(path[1].length, 2);
             assert.equal(path[1][0].toString().substring(2), node2);
@@ -311,7 +311,7 @@ contract("MERKLE", (accounts) => {
         }
 
         {
-            let path = await this.merkle.generateMerklePath.call(1, 0, 3);
+            let path = await this.merkle.generateMerklePath.call(1, 0, 2);
             assert.equal(path[0], 2);
             assert.equal(path[1].length, 2);
             assert.equal(path[1][0].toString().substring(2), node1);
@@ -325,7 +325,7 @@ contract("MERKLE", (accounts) => {
         }
 
         {
-            let path = await this.merkle.generateMerklePath.call(2, 0, 3);
+            let path = await this.merkle.generateMerklePath.call(2, 0, 2);
             assert.equal(path[0], 2);
             assert.equal(path[1].length, 2);
             assert.equal(path[1][0].toString().substring(2), node3);
@@ -348,7 +348,7 @@ contract("MERKLE", (accounts) => {
         await this.locker.createReceipt('400000', 'DDDDDDDDD', '',  {from: owner});
 
 
-        let tree = await this.merkle.getArbitraryMerkleTree.call(0, 4);
+        let tree = await this.merkle.getArbitraryMerkleTree.call(0, 3);
         assert.equal(tree[2], 4); // receipt count
         assert.equal(tree[3], 7); // tree size
         assert.equal(tree[4].length, 7); //tree node length
@@ -356,7 +356,7 @@ contract("MERKLE", (accounts) => {
         let treeNodes = tree[4];
         assert.equal(tree[0], treeNodes[6]);
 
-        let treeRoot = await this.merkle.getMerkleTreeRoot.call(0, 4);
+        let treeRoot = await this.merkle.getMerkleTreeRoot.call(0, 3);
         assert.equal(treeRoot, tree[0]);
 
         let node1 = calculateNodeHash(100000, 'AAAAAAAAA', 0);
@@ -370,7 +370,7 @@ contract("MERKLE", (accounts) => {
         assert.equal(node4, treeNodes[3].substring(2));
 
         {
-            let path = await this.merkle.generateMerklePath.call(0, 0, 4);
+            let path = await this.merkle.generateMerklePath.call(0, 0, 3);
             assert.equal(path[0], 2); // path length
             assert.equal(path[1].length, 2);
             assert.equal(path[1][0].toString().substring(2), node2);
@@ -385,7 +385,7 @@ contract("MERKLE", (accounts) => {
         }
 
         {
-            let path = await this.merkle.generateMerklePath.call(1, 0, 4);
+            let path = await this.merkle.generateMerklePath.call(1, 0, 3);
             assert.equal(path[0], 2);
             assert.equal(path[1].length, 2);
             assert.equal(path[1][0].toString().substring(2), node1);
@@ -400,7 +400,7 @@ contract("MERKLE", (accounts) => {
         }
 
         {
-            let path = await this.merkle.generateMerklePath.call(2, 0, 4);
+            let path = await this.merkle.generateMerklePath.call(2, 0, 3);
             assert.equal(path[0], 2);
             assert.equal(path[1].length, 2);
             assert.equal(path[1][0].toString().substring(2), node4);
@@ -415,7 +415,7 @@ contract("MERKLE", (accounts) => {
         }
 
         {
-            let path = await this.merkle.generateMerklePath.call(3, 0, 4);
+            let path = await this.merkle.generateMerklePath.call(3, 0, 3);
             assert.equal(path[0], 2);
             assert.equal(path[1].length, 2);
             assert.equal(path[1][0].toString().substring(2), node3);
@@ -446,7 +446,7 @@ contract("MERKLE", (accounts) => {
         assert.equal(tree[4], 7); // tree size
 
 
-        let treeRoot = await this.merkle.getMerkleTreeRoot.call(0, 4);
+        let treeRoot = await this.merkle.getMerkleTreeRoot.call(0, 3);
         assert.equal(treeRoot, tree[1]);
 
         let node1 = calculateNodeHash(100000, 'AAAAAAAAA', 0);
@@ -455,7 +455,7 @@ contract("MERKLE", (accounts) => {
         let node4 = calculateNodeHash(400000, 'DDDDDDDDD', 3);
 
         {
-            let path = await this.merkle.generateMerklePath.call(0, 0, 4);
+            let path = await this.merkle.generateMerklePath.call(0, 0, 3);
             assert.equal(path[0], 2); // path length
             assert.equal(path[1].length, 2);
             assert.equal(path[1][0].toString().substring(2), node2);
@@ -469,7 +469,7 @@ contract("MERKLE", (accounts) => {
         }
 
         {
-            let path = await this.merkle.generateMerklePath.call(1, 0, 4);
+            let path = await this.merkle.generateMerklePath.call(1, 0, 3);
             assert.equal(path[0], 2);
             assert.equal(path[1].length, 2);
             assert.equal(path[1][0].toString().substring(2), node1);
@@ -483,7 +483,7 @@ contract("MERKLE", (accounts) => {
         }
 
         {
-            let path = await this.merkle.generateMerklePath.call(2, 0, 4);
+            let path = await this.merkle.generateMerklePath.call(2, 0, 3);
             assert.equal(path[0], 2);
             assert.equal(path[1].length, 2);
             assert.equal(path[1][0].toString().substring(2), node4);
@@ -497,7 +497,7 @@ contract("MERKLE", (accounts) => {
         }
 
         {
-            let path = await this.merkle.generateMerklePath.call(3, 0, 4);
+            let path = await this.merkle.generateMerklePath.call(3, 0, 3);
             assert.equal(path[0], 2);
             assert.equal(path[1].length, 2);
             assert.equal(path[1][0].toString().substring(2), node3);
@@ -517,7 +517,7 @@ contract("MERKLE", (accounts) => {
             await this.locker.createReceipt(i.toString(), 'AAAAAAAAA', '', {from: owner});
         }
 
-        let arbitraryTree = await this.merkle.getArbitraryMerkleTree.call(0, 15);
+        let arbitraryTree = await this.merkle.getArbitraryMerkleTree.call(0, 14);
         assert.equal(arbitraryTree[1], 0); // first receipt id
         assert.equal(arbitraryTree[2], 15); // receipt count
         assert.equal(arbitraryTree[3], 31); // tree size
@@ -541,14 +541,14 @@ contract("MERKLE", (accounts) => {
         assert.equal(tree16_15[4], 31); // tree size
 
 
-        let treeRoot = await this.merkle.getMerkleTreeRoot.call(0, 15);
+        let treeRoot = await this.merkle.getMerkleTreeRoot.call(0, 14);
         assert.equal(treeRoot, arbitraryTree[0]);
         assert.equal(treeRoot, tree15_15[1]);
 
         for (let i = 0; i < 15; i++) {
             let node = calculateNodeHash(i, 'AAAAAAAAA', i);
             assert.equal(node, treeNodes[i].substring(2));
-            let path = await this.merkle.generateMerklePath.call(i, 0, 15);
+            let path = await this.merkle.generateMerklePath.call(i, 0, 14);
             let calculatedRoot = calculateWithPath(node, path[1], path[2]);
             assert.equal(calculatedRoot, arbitraryTree[0].substring(2));
         }
@@ -556,7 +556,7 @@ contract("MERKLE", (accounts) => {
         // 16th receipt
         await this.locker.createReceipt('15', 'AAAAAAAAA', '', {from: owner});
 
-        arbitraryTree = await this.merkle.getArbitraryMerkleTree.call(0, 16);
+        arbitraryTree = await this.merkle.getArbitraryMerkleTree.call(0, 15);
         assert.equal(arbitraryTree[1], 0); // first receipt id
         assert.equal(arbitraryTree[2], 16); // receipt count
         assert.equal(arbitraryTree[3], 31); // tree size
@@ -587,14 +587,14 @@ contract("MERKLE", (accounts) => {
         assert.equal(tree17_16[4], 31); // tree size
 
 
-        treeRoot = await this.merkle.getMerkleTreeRoot.call(0, 16);
+        treeRoot = await this.merkle.getMerkleTreeRoot.call(0, 15);
         assert.equal(treeRoot, arbitraryTree[0]);
         assert.equal(treeRoot, tree16_16[1]);
 
         for (let i = 0; i < 16; i++) {
             let node = calculateNodeHash(i, 'AAAAAAAAA', i);
             assert.equal(node, treeNodes_16[i].substring(2));
-            let path = await this.merkle.generateMerklePath.call(i, 0, 16);
+            let path = await this.merkle.generateMerklePath.call(i, 0, 15);
             let calculatedRoot = calculateWithPath(node, path[1], path[2]);
             assert.equal(calculatedRoot, arbitraryTree[0].substring(2));
         }
@@ -602,7 +602,7 @@ contract("MERKLE", (accounts) => {
         // 17th receipt
         await this.locker.createReceipt('16', 'AAAAAAAAA', '', {from: owner});
 
-        arbitraryTree = await this.merkle.getArbitraryMerkleTree.call(16, 1);
+        arbitraryTree = await this.merkle.getArbitraryMerkleTree.call(16, 16);
         assert.equal(arbitraryTree[1], 16); // first receipt id
         assert.equal(arbitraryTree[2], 1); // receipt count
         assert.equal(arbitraryTree[3], 3); // tree size
@@ -633,7 +633,7 @@ contract("MERKLE", (accounts) => {
         assert.equal(tree17_17[4], 3); // tree size
 
 
-        treeRoot = await this.merkle.getMerkleTreeRoot.call(16, 1);
+        treeRoot = await this.merkle.getMerkleTreeRoot.call(16, 16);
         assert.equal(treeRoot, arbitraryTree[0]);
         assert.equal(treeRoot, tree17_17[1]);
 
@@ -645,12 +645,12 @@ contract("MERKLE", (accounts) => {
                 assert.equal(node, treeNodes_16[i].substring(2));
 
             if (i === 16) {
-                let path = await this.merkle.generateMerklePath.call(i, 16, 1);
+                let path = await this.merkle.generateMerklePath.call(i, 16, 16);
                 let calculatedRoot = calculateWithPath(node, path[1], path[2]);
                 assert.equal(calculatedRoot, tree17_17[1].substring(2));
             }
             else {
-                let path = await this.merkle.generateMerklePath.call(i, 0, 16);
+                let path = await this.merkle.generateMerklePath.call(i, 0, 15);
                 let calculatedRoot = calculateWithPath(node, path[1], path[2]);
                 assert.equal(calculatedRoot, tree16_16[1].substring(2));
             }

@@ -54,10 +54,10 @@ contract MerkleTreeGenerator is Ownable {
         return leaves;
     }
 
-    function getArbitraryMerkleTree(uint256 _firstReceiptId, uint256 _receiptCount) public view returns (bytes32, uint256, uint256, uint256, bytes32[] memory){
+    function getArbitraryMerkleTree(uint256 _firstReceiptId, uint256 _lastReceiptId) public view returns (bytes32, uint256, uint256, uint256, bytes32[] memory){
         MerkleTree memory merkleTree;
         bytes32[] memory treeNodes;
-        (merkleTree, treeNodes) = _generateMerkleTree(_firstReceiptId, _receiptCount);
+        (merkleTree, treeNodes) = _generateMerkleTree(_firstReceiptId, _lastReceiptId.sub(_firstReceiptId).add(1));
         return (merkleTree.root, merkleTree.first_receipt_id, merkleTree.leaf_count, merkleTree.size, treeNodes);
     }
 
@@ -73,17 +73,18 @@ contract MerkleTreeGenerator is Ownable {
         return (previousTreeCount, merkleTree.root, merkleTree.first_receipt_id, merkleTree.leaf_count, merkleTree.size);
     }
 
-    function getMerkleTreeRoot(uint256 _firstReceiptId, uint256 _receiptCount) public view returns (bytes32){
+    function getMerkleTreeRoot(uint256 _firstReceiptId, uint256 _lastReceiptId) public view returns (bytes32){
         MerkleTree memory merkleTree;
         bytes32[] memory treeNodes;
-        (merkleTree, treeNodes) = _generateMerkleTree(_firstReceiptId, _receiptCount);
+        (merkleTree, treeNodes) = _generateMerkleTree(_firstReceiptId, _lastReceiptId.sub(_firstReceiptId).add(1));
         return merkleTree.root;
     }
 
     //get users merkle tree path
-    function generateMerklePath(uint256 _receiptId, uint256 _firstReceiptId, uint256 _receiptCount) public view returns (uint256, bytes32[] memory, bool[] memory) {
+    function generateMerklePath(uint256 _receiptId, uint256 _firstReceiptId, uint256 _lastReceiptId) public view returns (uint256, bytes32[] memory, bool[] memory) {
+        require(_lastReceiptId >= _firstReceiptId);
         MerkleTree memory merkleTree;
-        (merkleTree,) = _generateMerkleTree(_firstReceiptId, _receiptCount);
+        (merkleTree,) = _generateMerkleTree(_firstReceiptId, _lastReceiptId.sub(_firstReceiptId).add(1));
         uint256 index = _receiptId - merkleTree.first_receipt_id;
 
         uint256 pathLength;
