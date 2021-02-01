@@ -42,6 +42,19 @@ contract("MERKLE", (accounts) => {
         assert.equal(await this.merkle.MerkleTreeMaximalLeafCount.call(), 16);
     });
 
+    it("change receipt provider", async () => {
+        await expectRevert(this.merkle.changeReceiptMaker(owner, {from:accounts[1]}), "Ownable: caller is not the owner");
+        await this.merkle.changeReceiptMaker(owner, {from:owner});
+        assert.equal(await this.merkle.receiptProviderAddress.call(), owner);
+    });
+
+    it("change path length limit", async () => {
+        await expectRevert(this.merkle.changePathLengthLimit(10, {from:accounts[1]}), "Ownable: caller is not the owner");
+        await expectRevert(this.merkle.changePathLengthLimit(11, {from:owner}), "Exceeding Maximal Path Length.");
+        await this.merkle.changePathLengthLimit(10, {from:owner});
+        assert.equal(await this.merkle.MerkleTreeMaximalLeafCount.call(), 1024);
+    });
+
 
     it("getArbitraryMerkleTree arbitrary with 1 receipt", async () => {
         await this.token.approve(this.locker.address, '100000', {from: owner});
@@ -579,13 +592,7 @@ contract("MERKLE", (accounts) => {
         assert.equal(tree16_16[3], 16); // receipt count
         assert.equal(tree16_16[4], 31); // tree size
 
-        let tree17_16 = await this.merkle.getMerkleTree.call(17);
-        assert.equal(tree17_16[0], 0); // tree index
-        assert.equal(tree17_16[1], arbitraryTree[0]); // tree root
-        assert.equal(tree17_16[2], 0); // first receipt id
-        assert.equal(tree17_16[3], 16); // receipt count
-        assert.equal(tree17_16[4], 31); // tree size
-
+        await expectRevert.unspecified(this.merkle.getMerkleTree.call(17));
 
         treeRoot = await this.merkle.getMerkleTreeRoot.call(0, 15);
         assert.equal(treeRoot, arbitraryTree[0]);

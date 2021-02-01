@@ -30,6 +30,17 @@ contract MerkleTreeGenerator is Ownable {
         MerkleTreeMaximalSize = MerkleTreeMaximalLeafCount.mul(2);
     }
 
+    function changeReceiptMaker(Receipts _receiptMaker) onlyOwner public {
+        receiptProviderAddress = address(_receiptMaker);
+        receiptProvider = _receiptMaker;
+    }
+
+    function changePathLengthLimit(uint256 _pathLengthLimit) onlyOwner public {
+        require(_pathLengthLimit <= pathMaximalLength, "Exceeding Maximal Path Length.");
+        MerkleTreeMaximalLeafCount = 1 << _pathLengthLimit;
+        MerkleTreeMaximalSize = MerkleTreeMaximalLeafCount.mul(2);
+    }
+
     //fetch receipts
     function _receiptsToLeaves(uint256 _start, uint256 _leafCount) private view returns (bytes32[] memory){
         bytes32[] memory leaves = new bytes32[](_leafCount);
@@ -63,7 +74,9 @@ contract MerkleTreeGenerator is Ownable {
 
     function getMerkleTree(uint256 _expectCount) public view returns (uint256, bytes32, uint256, uint256, uint256){
         uint256 receiptCount = receiptProvider.receiptCount();
-        require(_expectCount > 0 && receiptCount> 0 && receiptCount.add(MerkleTreeMaximalLeafCount) > _expectCount);
+        require(_expectCount > 0 && receiptCount > 0 && receiptCount.add(MerkleTreeMaximalLeafCount) > _expectCount);
+        uint256 needMore = receiptCount.mod(MerkleTreeMaximalLeafCount) == 0 ? 0 : 1;
+        require(receiptCount.div(MerkleTreeMaximalLeafCount).mul(MerkleTreeMaximalLeafCount).add(needMore.mul(MerkleTreeMaximalLeafCount)) >= _expectCount);
         MerkleTree memory merkleTree;
         bytes32[] memory treeNodes;
         uint256 actualCount = _expectCount < receiptCount ? _expectCount : receiptCount;
@@ -83,6 +96,7 @@ contract MerkleTreeGenerator is Ownable {
     //get users merkle tree path
     function generateMerklePath(uint256 _receiptId, uint256 _firstReceiptId, uint256 _lastReceiptId) public view returns (uint256, bytes32[] memory, bool[] memory) {
         require(_lastReceiptId >= _firstReceiptId);
+        require(_receiptId <= _lastReceiptId && _receiptId >= _firstReceiptId);
         MerkleTree memory merkleTree;
         (merkleTree,) = _generateMerkleTree(_firstReceiptId, _lastReceiptId.sub(_firstReceiptId).add(1));
         uint256 index = _receiptId - merkleTree.first_receipt_id;
@@ -167,7 +181,7 @@ contract MerkleTreeGenerator is Ownable {
             shift = _index.sub(indexOfFirstNodeInRow).div(2);
             indexOfFirstNodeInRow = indexOfFirstNodeInRow.add(nodeCountInRow);
             _index = indexOfFirstNodeInRow.add(shift);
-            nodeCountInRow =nodeCountInRow.div(2);
+            nodeCountInRow = nodeCountInRow.div(2);
         }
 
         return (i, neighbors, isLeftNeighbors);
